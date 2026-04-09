@@ -96,12 +96,17 @@ public class SetBreakpointTool implements IMcpTool
             }
         }
 
+        Activator.logInfo("set_breakpoint: resolving module=" + module //$NON-NLS-1$
+            + " project=" + projectName + " pathStyle=" + (modulePathStyle ? "module" : "absolute")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         IFile file = BreakpointUtils.resolveModuleFile(projectName, module);
         if (file == null || !file.exists())
         {
+            Activator.logInfo("set_breakpoint: file not found — resolved=" //$NON-NLS-1$
+                + (file != null ? file.getFullPath() : "null")); //$NON-NLS-1$
             return ToolResult.error("Module file not found: " + module //$NON-NLS-1$
                     + (modulePathStyle ? " in project " + projectName : "")).toJson(); //$NON-NLS-1$ //$NON-NLS-2$
         }
+        Activator.logInfo("set_breakpoint: resolved to " + file.getFullPath()); //$NON-NLS-1$
 
         try
         {

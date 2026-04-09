@@ -80,17 +80,22 @@ public class WaitForBreakTool implements IMcpTool
         DebugSessionRegistry registry = DebugSessionRegistry.get();
         registry.ensureListenerRegistered();
 
+        Activator.logInfo("wait_for_break: appId=" + applicationId + " timeout=" + timeout + "s"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+
         try
         {
             DebugSessionRegistry.SuspendSnapshot snapshot =
                 registry.waitForSuspend(applicationId, timeout * 1000L);
             if (snapshot == null)
             {
+                Activator.logInfo("wait_for_break: TIMEOUT after " + timeout + "s for appId=" + applicationId); //$NON-NLS-1$ //$NON-NLS-2$
                 return ToolResult.success()
                     .put("hit", false) //$NON-NLS-1$
                     .put("reason", "timeout") //$NON-NLS-1$ //$NON-NLS-2$
                     .toJson();
             }
+            Activator.logInfo("wait_for_break: HIT threadId=" + snapshot.threadId //$NON-NLS-1$
+                + " appId=" + applicationId); //$NON-NLS-1$
             return buildSnapshotResponse(snapshot, registry);
         }
         catch (InterruptedException e)

@@ -66,31 +66,43 @@ public class ResumeTool implements IMcpTool
         {
             if (threadId > 0)
             {
+                Activator.logInfo("resume: by threadId=" + threadId); //$NON-NLS-1$
                 IThread thread = registry.getThread(threadId);
                 if (thread == null)
                 {
+                    Activator.logInfo("resume: threadId=" + threadId + " not found in registry (stale)"); //$NON-NLS-1$ //$NON-NLS-2$
                     return ToolResult.error("stale threadId").toJson(); //$NON-NLS-1$
                 }
-                if (!thread.canResume())
+                boolean suspended = thread.isSuspended();
+                boolean canResume = thread.canResume();
+                Activator.logInfo("resume: threadId=" + threadId + " suspended=" + suspended //$NON-NLS-1$ //$NON-NLS-2$
+                    + " canResume=" + canResume + " class=" + thread.getClass().getSimpleName()); //$NON-NLS-1$ //$NON-NLS-2$
+                if (!canResume)
                 {
-                    return ToolResult.error("thread cannot resume (state: " //$NON-NLS-1$
-                            + (thread.isSuspended() ? "suspended" : "running") + ")").toJson(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    return ToolResult.error("thread cannot resume (suspended=" + suspended + ")").toJson(); //$NON-NLS-1$ //$NON-NLS-2$
                 }
                 thread.resume();
+                Activator.logInfo("resume: threadId=" + threadId + " resumed OK"); //$NON-NLS-1$ //$NON-NLS-2$
                 return ToolResult.success().put("resumed", true).put("scope", "thread").toJson(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
             if (applicationId != null && !applicationId.isEmpty())
             {
+                Activator.logInfo("resume: by applicationId=" + applicationId); //$NON-NLS-1$
                 IDebugTarget target = DebugSessionRegistry.findActiveTarget(applicationId);
                 if (target == null)
                 {
+                    Activator.logInfo("resume: no active debug target for appId=" + applicationId); //$NON-NLS-1$
                     return ToolResult.error("no active debug target for applicationId: " + applicationId).toJson(); //$NON-NLS-1$
                 }
-                if (!target.canResume())
+                boolean canResume = target.canResume();
+                Activator.logInfo("resume: target=" + target.getClass().getSimpleName() //$NON-NLS-1$
+                    + " canResume=" + canResume + " terminated=" + target.isTerminated()); //$NON-NLS-1$ //$NON-NLS-2$
+                if (!canResume)
                 {
                     return ToolResult.error("debug target cannot resume").toJson(); //$NON-NLS-1$
                 }
                 target.resume();
+                Activator.logInfo("resume: target resumed OK for appId=" + applicationId); //$NON-NLS-1$
                 return ToolResult.success().put("resumed", true).put("scope", "target").toJson(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
             return ToolResult.error("Provide either threadId or applicationId").toJson(); //$NON-NLS-1$

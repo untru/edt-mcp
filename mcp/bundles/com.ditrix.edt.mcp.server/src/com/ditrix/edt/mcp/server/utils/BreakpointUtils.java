@@ -187,6 +187,8 @@ public final class BreakpointUtils
                             // EDT's constructor creates the marker but does not register
                             // with the breakpoint manager — do it explicitly.
                             bpManager.addBreakpoint(bp);
+                            Activator.logInfo("createLineBreakpoint: Strategy 1 OK — " + className //$NON-NLS-1$
+                                + " file=" + file.getFullPath() + " line=" + lineNumber); //$NON-NLS-1$ //$NON-NLS-2$
                             return bp;
                         }
                     }
@@ -226,6 +228,8 @@ public final class BreakpointUtils
                     return bp;
                 }
                 // No registered breakpoint type — keep the marker but report a degraded result.
+                Activator.logInfo("createLineBreakpoint: Strategy 2 — MarkerOnly for " + markerType //$NON-NLS-1$
+                    + " (no registered bp type)"); //$NON-NLS-1$
                 return new MarkerOnlyBreakpoint(marker);
             }
             catch (Exception ex)
@@ -235,6 +239,8 @@ public final class BreakpointUtils
         }
 
         // Strategy 3: generic Eclipse line marker (least useful, but compiles & runs)
+        Activator.logInfo("createLineBreakpoint: Strategy 3 — GENERIC fallback for file=" //$NON-NLS-1$
+            + file.getFullPath() + " line=" + lineNumber); //$NON-NLS-1$
         IMarker marker = file.createMarker(GENERIC_LINE_MARKER);
         Map<String, Object> attrs = new HashMap<>();
         attrs.put(IMarker.LINE_NUMBER, Integer.valueOf(lineNumber));

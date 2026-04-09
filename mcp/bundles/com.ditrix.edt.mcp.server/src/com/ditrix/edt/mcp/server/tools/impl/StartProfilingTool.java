@@ -101,19 +101,25 @@ public class StartProfilingTool implements IMcpTool
                 "com._1c.g5.v8.dt.profiling.core.IProfileTarget"); //$NON-NLS-1$
 
             // Try to adapt the debug target to IProfileTarget
+            Activator.logInfo("start_profiling: target class=" + target.getClass().getName() //$NON-NLS-1$
+                + " terminated=" + target.isTerminated()); //$NON-NLS-1$
             Object profileTarget = null;
             if (profileTargetClass.isInstance(target))
             {
                 profileTarget = target;
+                Activator.logInfo("start_profiling: target IS IProfileTarget directly"); //$NON-NLS-1$
             }
             else
             {
                 // Try Eclipse adapter mechanism
                 profileTarget = target.getAdapter(profileTargetClass);
+                Activator.logInfo("start_profiling: adapter lookup = " //$NON-NLS-1$
+                    + (profileTarget != null ? profileTarget.getClass().getName() : "null")); //$NON-NLS-1$
             }
 
             if (profileTarget == null)
             {
+                Activator.logInfo("start_profiling: FAILED — target does not support profiling"); //$NON-NLS-1$
                 return ToolResult.error("Debug target does not support profiling. " //$NON-NLS-1$
                     + "Target class: " + target.getClass().getName()).toJson(); //$NON-NLS-1$
             }

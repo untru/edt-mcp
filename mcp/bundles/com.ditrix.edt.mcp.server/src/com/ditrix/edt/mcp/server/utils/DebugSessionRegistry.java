@@ -105,21 +105,34 @@ public final class DebugSessionRegistry
     private void handleEvent(DebugEvent ev)
     {
         Object source = ev.getSource();
+        String eventKind;
         switch (ev.getKind())
         {
             case DebugEvent.SUSPEND:
+                eventKind = "SUSPEND"; //$NON-NLS-1$
+                Activator.logInfo("DebugEvent: " + eventKind + " source=" + source.getClass().getSimpleName() //$NON-NLS-1$ //$NON-NLS-2$
+                    + " detail=" + ev.getDetail()); //$NON-NLS-1$
                 if (source instanceof IThread)
                 {
                     onSuspend((IThread) source);
                 }
+                else
+                {
+                    Activator.logInfo("DebugEvent: SUSPEND ignored — source is not IThread: " //$NON-NLS-1$
+                        + source.getClass().getName()); //$NON-NLS-1$
+                }
                 break;
             case DebugEvent.RESUME:
+                eventKind = "RESUME"; //$NON-NLS-1$
+                Activator.logInfo("DebugEvent: " + eventKind + " source=" + source.getClass().getSimpleName()); //$NON-NLS-1$ //$NON-NLS-2$
                 if (source instanceof IThread)
                 {
                     onResumeOrTerminate(findApplicationIdFor((IThread) source));
                 }
                 break;
             case DebugEvent.TERMINATE:
+                eventKind = "TERMINATE"; //$NON-NLS-1$
+                Activator.logInfo("DebugEvent: " + eventKind + " source=" + source.getClass().getSimpleName()); //$NON-NLS-1$ //$NON-NLS-2$
                 if (source instanceof IDebugTarget)
                 {
                     onResumeOrTerminate(findApplicationIdFor((IDebugTarget) source));
@@ -143,6 +156,8 @@ public final class DebugSessionRegistry
         String appId = findApplicationIdFor(thread);
         if (appId == null)
         {
+            Activator.logInfo("onSuspend: cannot determine applicationId for thread " //$NON-NLS-1$
+                + thread.getClass().getName() + " — ignoring"); //$NON-NLS-1$
             return;
         }
         long threadId = idGenerator.getAndIncrement();
@@ -150,6 +165,16 @@ public final class DebugSessionRegistry
         threadAppId.put(threadId, appId);
         SuspendSnapshot snapshot = new SuspendSnapshot(threadId, thread);
         snapshots.put(appId, snapshot);
+        try
+        {
+            String threadName = thread.getName();
+            Activator.logInfo("onSuspend: appId=" + appId + " threadId=" + threadId //$NON-NLS-1$ //$NON-NLS-2$
+                + " threadName=" + threadName + " snapshots=" + snapshots.size()); //$NON-NLS-1$ //$NON-NLS-2$
+        }
+        catch (Exception ex)
+        {
+            Activator.logInfo("onSuspend: appId=" + appId + " threadId=" + threadId); //$NON-NLS-1$ //$NON-NLS-2$
+        }
         // notify any waiters
         notifyAll();
     }
@@ -158,8 +183,12 @@ public final class DebugSessionRegistry
     {
         if (appId == null)
         {
+            Activator.logInfo("onResumeOrTerminate: appId is null — ignoring"); //$NON-NLS-1$
             return;
         }
+        Activator.logInfo("onResumeOrTerminate: appId=" + appId //$NON-NLS-1$
+            + " hadSnapshot=" + snapshots.containsKey(appId) //$NON-NLS-1$
+            + " threads=" + threadsById.size() + " frames=" + framesById.size()); //$NON-NLS-1$ //$NON-NLS-2$
         snapshots.remove(appId);
         // drop stale thread/frame references for this app
         threadAppId.entrySet().removeIf(entry -> {
